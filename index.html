@@ -1,504 +1,134 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProductivityHub — Dashboard</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link href="https://unpkg.com/lucide-static@latest/font/lucide.css" rel="stylesheet">
-    <link rel="stylesheet" href="index.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Study Planner</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <!-- Sidebar -->
-    <aside class="sidebar" id="sidebar">
-        <div class="sidebar-brand">
-            <div class="brand-logo">
-                <i class="lucide-zap"></i>
-            </div>
-            <span class="brand-text">Productivity<span class="brand-accent">Hub</span></span>
+
+  <!-- ========== TOP NAVIGATION BAR ========== -->
+  <header class="topbar">
+    <div class="brand"><img src="logo.png" alt="Logo" class="brand-logo" /> Smart Study Planner</div>
+    <nav class="nav" id="main-nav" aria-label="Main navigation">
+      <button data-nav="dashboard" class="nav-btn active" type="button">Dashboard</button>
+      <button data-nav="subjects"  class="nav-btn" type="button">Subjects</button>
+      <button data-nav="schedule"  class="nav-btn" type="button">Schedule</button>
+      <button data-nav="tasks"     class="nav-btn" type="button">Tasks</button>
+      <button data-nav="analytics" class="nav-btn" type="button">Analytics</button>
+      <button data-nav="settings"  class="nav-btn" type="button">Settings</button>
+    </nav>
+
+    <button class="hamburger" id="hamburger" type="button" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+    <button id="nav-theme-toggle" class="theme-btn" type="button" aria-label="Toggle theme" title="Toggle Light/Dark">
+      <span class="theme-icon">🌙</span>
+    </button>
+  </header>
+
+  <main id="app">
+
+    <!-- A. DASHBOARD -->
+    <section id="dashboard" class="view">
+      <h2 class="section-title">Dashboard</h2>
+      <div class="cards">
+        <div class="card card-accent">
+          <h3>Total Subjects</h3>
+          <div id="total-subjects" class="stat">0</div>
         </div>
-        <nav class="sidebar-nav">
-            <a href="#" class="nav-item active" data-page="dashboard">
-                <i class="lucide-layout-dashboard nav-icon"></i>
-                <span class="nav-label">Dashboard</span>
-            </a>
-            <a href="#" class="nav-item" data-page="tasks">
-                <i class="lucide-check-square nav-icon"></i>
-                <span class="nav-label">Tasks</span>
-            </a>
-            <a href="#" class="nav-item" data-page="schedule">
-                <i class="lucide-calendar-days nav-icon"></i>
-                <span class="nav-label">Schedule</span>
-            </a>
-            <a href="#" class="nav-item" data-page="analytics">
-                <i class="lucide-bar-chart-3 nav-icon"></i>
-                <span class="nav-label">Analytics</span>
-            </a>
-            <a href="#" class="nav-item" data-page="goals">
-                <i class="lucide-target nav-icon"></i>
-                <span class="nav-label">Goals</span>
-            </a>
-            <a href="#" class="nav-item" data-page="pomodoro">
-                <i class="lucide-timer nav-icon"></i>
-                <span class="nav-label">Pomodoro</span>
-            </a>
-            <a href="#" class="nav-item" data-page="notes">
-                <i class="lucide-file-text nav-icon"></i>
-                <span class="nav-label">Notes</span>
-            </a>
-        </nav>
-        <div class="sidebar-footer">
-            <div class="streak-badge">
-                <i class="lucide-flame streak-icon"></i>
-                <span class="streak-text" id="streakCount">0 day streak</span>
-            </div>
+        <div class="card">
+          <h3>Upcoming Deadlines</h3>
+          <ul id="upcoming-deadlines" class="dash-list"></ul>
         </div>
-    </aside>
+        <div class="card">
+          <h3>Today&rsquo;s Schedule</h3>
+          <ul id="today-schedule" class="dash-list"></ul>
+        </div>
+      </div>
+      <div class="welcome-box">
+        <h2>Welcome &mdash; plan your study time efficiently</h2>
+        <p class="muted">Use the navigation above to manage subjects, plan schedules, track tasks and view progress.</p>
+      </div>
+    </section>
 
-    <!-- Main Content -->
-    <main class="main-content" id="mainContent">
-        <!-- Top Bar -->
-        <header class="topbar">
-            <button class="sidebar-toggle" id="sidebarToggle">
-                <i class="lucide-menu"></i>
-            </button>
-            <div class="topbar-left">
-                <h2 class="page-title" id="pageTitle">Dashboard</h2>
-                <span class="page-date" id="currentDate"></span>
-            </div>
-            <div class="topbar-right">
-                <div class="topbar-greeting" id="greeting"></div>
-                <div class="topbar-avatar">
-                    <i class="lucide-user"></i>
-                </div>
-            </div>
-        </header>
+    <!-- B. SUBJECT MANAGEMENT -->
+    <section id="subjects" class="view hidden">
+      <div class="panel">
+        <div class="panel-head">
+          <h2 class="section-title">Subjects</h2>
+          <button id="add-subject-btn" class="btn primary" type="button">+ Add Subject</button>
+        </div>
+        <div id="subjects-list" class="list-group"></div>
+      </div>
+    </section>
 
-        <!-- ====== DASHBOARD PAGE ====== -->
-        <section class="page active" id="page-dashboard">
-            <div class="stats-grid">
-                <div class="stat-card stat-total">
-                    <div class="stat-card-icon"><i class="lucide-clipboard-list"></i></div>
-                    <div class="stat-card-info">
-                        <span class="stat-card-value" id="dashTotalTasks">0</span>
-                        <span class="stat-card-label">Total Tasks</span>
-                    </div>
-                    <div class="stat-card-trend"><i class="lucide-trending-up"></i></div>
-                </div>
-                <div class="stat-card stat-completed">
-                    <div class="stat-card-icon"><i class="lucide-check-circle-2"></i></div>
-                    <div class="stat-card-info">
-                        <span class="stat-card-value" id="dashCompletedTasks">0</span>
-                        <span class="stat-card-label">Completed</span>
-                    </div>
-                    <div class="stat-card-trend"><i class="lucide-trending-up"></i></div>
-                </div>
-                <div class="stat-card stat-active">
-                    <div class="stat-card-icon"><i class="lucide-loader"></i></div>
-                    <div class="stat-card-info">
-                        <span class="stat-card-value" id="dashActiveTasks">0</span>
-                        <span class="stat-card-label">In Progress</span>
-                    </div>
-                    <div class="stat-card-trend"><i class="lucide-minus"></i></div>
-                </div>
-                <div class="stat-card stat-overdue">
-                    <div class="stat-card-icon"><i class="lucide-alert-triangle"></i></div>
-                    <div class="stat-card-info">
-                        <span class="stat-card-value" id="dashOverdueTasks">0</span>
-                        <span class="stat-card-label">Overdue</span>
-                    </div>
-                    <div class="stat-card-trend"><i class="lucide-trending-down"></i></div>
-                </div>
-            </div>
+    <!-- C. SCHEDULE PLANNER -->
+    <section id="schedule" class="view hidden">
+      <div class="panel">
+        <div class="panel-head">
+          <h2 class="section-title">Weekly Schedule</h2>
+          <div class="controls">
+            <select id="schedule-subject-select" aria-label="Select subject"></select>
+            <button id="clear-schedule" class="btn" type="button">Clear Week</button>
+          </div>
+        </div>
+        <div class="day-tabs" id="day-tabs" aria-label="Select day for mobile view"></div>
+        <div id="schedule-grid" class="schedule-grid" aria-label="Weekly timetable"></div>
+        <p class="muted hint">Click a slot to assign the selected subject. Click with no subject selected to clear a slot.</p>
+      </div>
+    </section>
 
-            <div class="dashboard-row">
-                <div class="card productivity-score-card">
-                    <h3 class="card-title"><i class="lucide-gauge"></i> Productivity Score</h3>
-                    <div class="score-ring-container">
-                        <canvas id="scoreRing" width="180" height="180"></canvas>
-                        <div class="score-ring-label" id="scoreLabel">0%</div>
-                    </div>
-                    <p class="score-message" id="scoreMessage">Start completing tasks!</p>
-                </div>
-                <div class="card today-focus-card">
-                    <h3 class="card-title"><i class="lucide-sun"></i> Today's Focus</h3>
-                    <ul class="today-tasks-list" id="todayTasksList"></ul>
-                </div>
-                <div class="card quick-actions-card">
-                    <h3 class="card-title"><i class="lucide-rocket"></i> Quick Actions</h3>
-                    <div class="quick-actions-grid">
-                        <button class="quick-action-btn" id="quickAddTask">
-                            <i class="lucide-plus-circle"></i><label>New Task</label>
-                        </button>
-                        <button class="quick-action-btn" id="quickStartPomodoro">
-                            <i class="lucide-timer"></i><label>Pomodoro</label>
-                        </button>
-                        <button class="quick-action-btn" id="quickAddNote">
-                            <i class="lucide-file-plus"></i><label>New Note</label>
-                        </button>
-                        <button class="quick-action-btn" id="quickAddGoal">
-                            <i class="lucide-target"></i><label>New Goal</label>
-                        </button>
-                    </div>
-                </div>
-            </div>
+    <!-- D. TASK MANAGER -->
+    <section id="tasks" class="view hidden">
+      <div class="panel">
+        <div class="panel-head">
+          <h2 class="section-title">Tasks</h2>
+          <button id="add-task-btn" class="btn primary" type="button">+ Add Task</button>
+        </div>
+        <div id="tasks-list" class="list-group"></div>
+      </div>
+    </section>
 
-            <div class="dashboard-row">
-                <div class="card chart-card">
-                    <h3 class="card-title"><i class="lucide-activity"></i> Weekly Activity</h3>
-                    <canvas id="weeklyChart" height="220"></canvas>
-                </div>
-                <div class="card chart-card">
-                    <h3 class="card-title"><i class="lucide-pie-chart"></i> Tasks by Category</h3>
-                    <canvas id="categoryChart" height="220"></canvas>
-                </div>
-            </div>
+    <!-- E. PROGRESS ANALYTICS -->
+    <section id="analytics" class="view hidden">
+      <div class="panel">
+        <h2 class="section-title">Progress Analytics</h2>
+        <div id="analytics-area"></div>
+      </div>
+    </section>
 
-            <div class="card">
-                <h3 class="card-title"><i class="lucide-clock"></i> Recent Activity</h3>
-                <div class="activity-feed" id="activityFeed"></div>
-            </div>
-        </section>
+    <!-- F. SETTINGS -->
+    <section id="settings" class="view hidden">
+      <div class="panel">
+        <h2 class="section-title">Settings</h2>
+        <div class="settings-row">
+          <label>Theme</label>
+          <button id="theme-toggle" class="btn" type="button">Toggle Light / Dark</button>
+        </div>
+        <div class="settings-row">
+          <label>Export</label>
+          <button id="export-data" class="btn" type="button">Export JSON</button>
+        </div>
+        <div class="settings-row">
+          <label>Reset</label>
+          <button id="reset-data" class="btn danger" type="button">Reset All Data</button>
+        </div>
+      </div>
+    </section>
 
-        <!-- ====== TASKS PAGE ====== -->
-        <section class="page" id="page-tasks">
-            <div class="card task-input-card">
-                <div class="task-input-section">
-                    <div class="input-with-icon">
-                        <i class="lucide-plus input-icon"></i>
-                        <input type="text" id="taskInput" placeholder="What do you need to do?" />
-                    </div>
-                    <div class="task-input-row">
-                        <div class="custom-select-wrapper">
-                            <i class="lucide-flag select-icon"></i>
-                            <select id="prioritySelect" class="select-input">
-                                <option value="low">Low Priority</option>
-                                <option value="medium" selected>Medium Priority</option>
-                                <option value="high">High Priority</option>
-                            </select>
-                        </div>
-                        <div class="custom-select-wrapper">
-                            <i class="lucide-tag select-icon"></i>
-                            <select id="categorySelect" class="select-input">
-                                <option value="personal">Personal</option>
-                                <option value="work">Work</option>
-                                <option value="health">Health</option>
-                                <option value="shopping">Shopping</option>
-                                <option value="learning">Learning</option>
-                                <option value="other">Other</option>
-                            </select>
-                        </div>
-                        <div class="custom-select-wrapper">
-                            <i class="lucide-calendar select-icon"></i>
-                            <input type="date" id="dueDateInput" class="date-input" />
-                        </div>
-                        <button id="addBtn" class="btn-primary">
-                            <i class="lucide-plus"></i> Add Task
-                        </button>
-                    </div>
-                </div>
-            </div>
+  </main>
 
-            <div class="task-controls-row">
-                <div class="task-filters">
-                    <button class="filter-btn active" data-filter="all">All</button>
-                    <button class="filter-btn" data-filter="active">Active</button>
-                    <button class="filter-btn" data-filter="completed">Done</button>
-                    <button class="filter-btn" data-filter="today">Today</button>
-                    <button class="filter-btn" data-filter="overdue">Overdue</button>
-                </div>
-                <div class="task-sort-search">
-                    <div class="input-with-icon search-wrapper">
-                        <i class="lucide-search input-icon"></i>
-                        <input type="text" id="searchInput" placeholder="Search tasks..." class="search-input" />
-                    </div>
-                    <div class="custom-select-wrapper">
-                        <i class="lucide-arrow-up-down select-icon"></i>
-                        <select id="sortSelect" class="select-input">
-                            <option value="created">Newest</option>
-                            <option value="priority">Priority</option>
-                            <option value="dueDate">Due Date</option>
-                            <option value="category">Category</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
+  <div id="modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-box">
+      <button id="modal-close" class="modal-close" type="button" aria-label="Close">&times;</button>
+      <div id="modal-body"></div>
+    </div>
+  </div>
 
-            <div class="task-stats-mini">
-                <div class="stat-pill"><strong id="totalTasks">0</strong> Total</div>
-                <div class="stat-pill active"><strong id="activeTasks">0</strong> Active</div>
-                <div class="stat-pill done"><strong id="completedTasks">0</strong> Done</div>
-                <button id="clearCompleted" class="btn-text-danger">
-                    <i class="lucide-trash-2"></i> Clear Completed
-                </button>
-            </div>
+  <div id="toast" class="toast hidden"></div>
 
-            <div class="card task-list-card">
-                <ul id="taskList" class="task-list"></ul>
-            </div>
-        </section>
-
-        <!-- ====== SCHEDULE PAGE ====== -->
-        <section class="page" id="page-schedule">
-            <div class="schedule-header">
-                <button class="btn-icon" id="prevWeek"><i class="lucide-chevron-left"></i></button>
-                <h3 id="scheduleWeekLabel">This Week</h3>
-                <button class="btn-icon" id="nextWeek"><i class="lucide-chevron-right"></i></button>
-                <button class="btn-secondary" id="scheduleToday">
-                    <i class="lucide-calendar-check"></i> Today
-                </button>
-            </div>
-            <div class="schedule-grid" id="scheduleGrid"></div>
-
-            <div class="modal-overlay" id="timeBlockModal" style="display:none;">
-                <div class="modal">
-                    <div class="modal-header">
-                        <h3><i class="lucide-clock"></i> Add Time Block</h3>
-                        <button class="modal-close" id="cancelBlock"><i class="lucide-x"></i></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="form-group">
-                            <label>Title</label>
-                            <input type="text" id="blockTitle" placeholder="Block title..." />
-                        </div>
-                        <div class="modal-row">
-                            <div class="form-group">
-                                <label>Date</label>
-                                <input type="date" id="blockDate" class="date-input" />
-                            </div>
-                            <div class="form-group">
-                                <label>Start</label>
-                                <input type="time" id="blockStart" class="date-input" value="09:00" />
-                            </div>
-                            <div class="form-group">
-                                <label>End</label>
-                                <input type="time" id="blockEnd" class="date-input" value="10:00" />
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>Color</label>
-                            <div class="color-picker" id="blockColorPicker">
-                                <button class="color-dot active" data-color="#667eea" style="background:#667eea;"></button>
-                                <button class="color-dot" data-color="#22c55e" style="background:#22c55e;"></button>
-                                <button class="color-dot" data-color="#ef4444" style="background:#ef4444;"></button>
-                                <button class="color-dot" data-color="#f59e0b" style="background:#f59e0b;"></button>
-                                <button class="color-dot" data-color="#a78bfa" style="background:#a78bfa;"></button>
-                                <button class="color-dot" data-color="#f97316" style="background:#f97316;"></button>
-                                <button class="color-dot" data-color="#06b6d4" style="background:#06b6d4;"></button>
-                                <button class="color-dot" data-color="#ec4899" style="background:#ec4899;"></button>
-                            </div>
-                            <input type="hidden" id="blockColor" value="#667eea" />
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn-primary" id="saveBlock">
-                            <i class="lucide-check"></i> Save Block
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ====== ANALYTICS PAGE ====== -->
-        <section class="page" id="page-analytics">
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-card-icon"><i class="lucide-percent"></i></div>
-                    <div class="stat-card-info">
-                        <span class="stat-card-value" id="analyticsCompletionRate">0%</span>
-                        <span class="stat-card-label">Completion Rate</span>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-card-icon"><i class="lucide-zap"></i></div>
-                    <div class="stat-card-info">
-                        <span class="stat-card-value" id="analyticsAvgPerDay">0</span>
-                        <span class="stat-card-label">Avg Tasks/Day</span>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-card-icon"><i class="lucide-timer"></i></div>
-                    <div class="stat-card-info">
-                        <span class="stat-card-value" id="analyticsPomodoroCount">0</span>
-                        <span class="stat-card-label">Pomodoros Done</span>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-card-icon"><i class="lucide-trophy"></i></div>
-                    <div class="stat-card-info">
-                        <span class="stat-card-value" id="analyticsBestDay">-</span>
-                        <span class="stat-card-label">Best Day</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="dashboard-row">
-                <div class="card chart-card">
-                    <h3 class="card-title"><i class="lucide-trending-up"></i> Completion Trend (30 Days)</h3>
-                    <canvas id="trendChart" height="250"></canvas>
-                </div>
-                <div class="card chart-card">
-                    <h3 class="card-title"><i class="lucide-bar-chart-2"></i> Priority Distribution</h3>
-                    <canvas id="priorityChart" height="250"></canvas>
-                </div>
-            </div>
-
-            <div class="dashboard-row">
-                <div class="card chart-card">
-                    <h3 class="card-title"><i class="lucide-grid-3x3"></i> Productivity Heatmap</h3>
-                    <div class="heatmap" id="heatmap"></div>
-                </div>
-                <div class="card">
-                    <h3 class="card-title"><i class="lucide-lightbulb"></i> Insights</h3>
-                    <div class="insights-list" id="insightsList"></div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ====== GOALS PAGE ====== -->
-        <section class="page" id="page-goals">
-            <div class="card">
-                <div class="goal-input-section">
-                    <div class="input-with-icon">
-                        <i class="lucide-target input-icon"></i>
-                        <input type="text" id="goalInput" placeholder="What's your goal?" />
-                    </div>
-                    <div class="task-input-row">
-                        <div class="custom-select-wrapper">
-                            <i class="lucide-hash select-icon"></i>
-                            <input type="number" id="goalTarget" placeholder="Target" min="1" class="date-input" style="width:120px;" />
-                        </div>
-                        <div class="custom-select-wrapper">
-                            <i class="lucide-ruler select-icon"></i>
-                            <select id="goalUnit" class="select-input">
-                                <option value="tasks">Tasks</option>
-                                <option value="pomodoros">Pomodoros</option>
-                                <option value="hours">Hours</option>
-                                <option value="items">Items</option>
-                            </select>
-                        </div>
-                        <div class="custom-select-wrapper">
-                            <i class="lucide-calendar select-icon"></i>
-                            <input type="date" id="goalDeadline" class="date-input" />
-                        </div>
-                        <button class="btn-primary" id="addGoalBtn">
-                            <i class="lucide-plus"></i> Add Goal
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div class="goals-grid" id="goalsGrid"></div>
-        </section>
-
-        <!-- ====== POMODORO PAGE ====== -->
-        <section class="page" id="page-pomodoro">
-            <div class="pomodoro-container">
-                <div class="card pomodoro-card">
-                    <div class="pomodoro-mode-tabs">
-                        <button class="pomo-tab active" data-mode="work">
-                            <i class="lucide-brain"></i> Focus
-                        </button>
-                        <button class="pomo-tab" data-mode="shortBreak">
-                            <i class="lucide-coffee"></i> Short Break
-                        </button>
-                        <button class="pomo-tab" data-mode="longBreak">
-                            <i class="lucide-sofa"></i> Long Break
-                        </button>
-                    </div>
-                    <div class="pomodoro-timer-display">
-                        <canvas id="pomodoroRing" width="280" height="280"></canvas>
-                        <div class="pomo-time" id="pomoTime">25:00</div>
-                    </div>
-                    <div class="pomodoro-controls">
-                        <button class="btn-primary btn-large" id="pomoStartBtn">
-                            <i class="lucide-play"></i> Start
-                        </button>
-                        <button class="btn-secondary" id="pomoResetBtn">
-                            <i class="lucide-rotate-ccw"></i> Reset
-                        </button>
-                    </div>
-                    <div class="pomodoro-session-info">
-                        <div class="pomo-info-item">
-                            <i class="lucide-repeat"></i>
-                            <span>Session <strong id="pomoSession">1</strong>/4</span>
-                        </div>
-                        <div class="pomo-info-item">
-                            <i class="lucide-timer"></i>
-                            <span>Today <strong id="pomoTodayCount">0</strong></span>
-                        </div>
-                    </div>
-                </div>
-                <div class="card pomo-settings-card">
-                    <h3 class="card-title"><i class="lucide-settings"></i> Settings</h3>
-                    <div class="pomo-setting">
-                        <label><i class="lucide-brain"></i> Focus (min)</label>
-                        <input type="number" id="pomoWorkDuration" value="25" min="1" max="120" class="date-input" />
-                    </div>
-                    <div class="pomo-setting">
-                        <label><i class="lucide-coffee"></i> Short Break (min)</label>
-                        <input type="number" id="pomoShortBreak" value="5" min="1" max="30" class="date-input" />
-                    </div>
-                    <div class="pomo-setting">
-                        <label><i class="lucide-sofa"></i> Long Break (min)</label>
-                        <input type="number" id="pomoLongBreak" value="15" min="1" max="60" class="date-input" />
-                    </div>
-                    <h3 class="card-title" style="margin-top:24px;"><i class="lucide-list"></i> Today's Log</h3>
-                    <div class="pomo-log" id="pomoLog"></div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ====== NOTES PAGE ====== -->
-        <section class="page" id="page-notes">
-            <div class="notes-toolbar">
-                <button class="btn-primary" id="addNoteBtn">
-                    <i class="lucide-plus"></i> New Note
-                </button>
-                <div class="input-with-icon search-wrapper" style="flex:1;">
-                    <i class="lucide-search input-icon"></i>
-                    <input type="text" id="noteSearch" placeholder="Search notes..." class="search-input" />
-                </div>
-            </div>
-            <div class="notes-grid" id="notesGrid"></div>
-
-            <div class="modal-overlay" id="noteModal" style="display:none;">
-                <div class="modal modal-large">
-                    <div class="modal-header">
-                        <h3><i class="lucide-file-text"></i> Note</h3>
-                        <button class="modal-close" id="cancelNoteBtn"><i class="lucide-x"></i></button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="text" id="noteTitle" placeholder="Note title..." class="note-title-input" />
-                        <textarea id="noteContent" placeholder="Write your note..." class="note-textarea"></textarea>
-                        <div class="form-group">
-                            <label>Theme</label>
-                            <div class="color-picker" id="noteColorPicker">
-                                <button class="color-dot active" data-color="#1e293b" style="background:#1e293b;border:2px solid #475569;"></button>
-                                <button class="color-dot" data-color="#1e3a5f" style="background:#1e3a5f;"></button>
-                                <button class="color-dot" data-color="#1a3a2a" style="background:#1a3a2a;"></button>
-                                <button class="color-dot" data-color="#3a1a1a" style="background:#3a1a1a;"></button>
-                                <button class="color-dot" data-color="#3a351a" style="background:#3a351a;"></button>
-                                <button class="color-dot" data-color="#2d1a3a" style="background:#2d1a3a;"></button>
-                            </div>
-                            <input type="hidden" id="noteColor" value="#1e293b" />
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn-text-danger" id="deleteNoteBtn" style="display:none;">
-                            <i class="lucide-trash-2"></i> Delete
-                        </button>
-                        <div style="flex:1;"></div>
-                        <button class="btn-primary" id="saveNoteBtn">
-                            <i class="lucide-check"></i> Save
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <script src="main.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
