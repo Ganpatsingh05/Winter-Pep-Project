@@ -75,6 +75,7 @@
   function refreshAllViews(){
     renderDashboard(); renderSubjects(); renderTasks();
     renderSchedule(); renderAnalytics(); applyTheme();
+    renderRecentActivity(); renderQuote();
   }
 
   // Default init
@@ -460,6 +461,10 @@
         today.appendChild(li);
       });
     }
+
+    // Refresh sidebar widgets
+    renderRecentActivity();
+    renderQuote();
   }
 
 
@@ -475,12 +480,23 @@
     const completionRate = totalTasks ? Math.round((completedTasks/totalTasks)*100) : 0;
     const totalHours = sched.length;
     const overdue = tasks.filter(t=>t.status!=='completed' && t.deadline && new Date(t.deadline)<new Date()).length;
+    const pendingCount = tasks.filter(t=>t.status!=='completed').length;
+
+    // Calculate streak (days with scheduled sessions leading up to today)
+    const todayDay = (new Date().getDay()+6)%7;
+    let streak = 0;
+    for(let d = todayDay; d >= 0; d--){
+      if(sched.some(s=>s.day===d)) streak++;
+      else break;
+    }
 
     const summaryData = [
       {val: subs.length, label: 'Subjects'},
       {val: totalHours, label: 'Study Hrs/Wk'},
       {val: completionRate + '%', label: 'Completion'},
-      {val: overdue, label: 'Overdue'}
+      {val: overdue, label: 'Overdue'},
+      {val: pendingCount, label: 'Pending'},
+      {val: streak + 'd', label: 'Streak'}
     ];
     summaryData.forEach(d => {
       const card = document.createElement('div');
@@ -494,11 +510,14 @@
       return;
     }
 
-    // Per-subject progress
-    const heading = document.createElement('h3');
-    heading.style.cssText = 'font-size:1.05rem;margin-bottom:12px;color:var(--text-secondary)';
-    heading.textContent = 'Subject Progress';
-    area.appendChild(heading);
+    // === Subject Progress (2-column grid) ===
+    const progressHeading = document.createElement('h3');
+    progressHeading.style.cssText = 'font-size:1.05rem;margin-bottom:12px;color:var(--text-secondary)';
+    progressHeading.textContent = 'Subject Progress';
+    area.appendChild(progressHeading);
+
+    const progressGrid = document.createElement('div');
+    progressGrid.className = 'analytics-grid';
 
     subs.forEach(s=>{
       const subTasks = tasks.filter(t=>t.subjectId===s.id);
@@ -519,26 +538,109 @@
           <span>${done}/${total} tasks</span>
           <span>${schedHours} hrs/wk</span>
         </div>`;
-      area.appendChild(block);
+      progressGrid.appendChild(block);
     });
+    area.appendChild(progressGrid);
 
-    // Insight section
+    // === Two-panel row: Study Time Distribution + Task Type Breakdown ===
+    const panels = document.createElement('div');
+    panels.className = 'analytics-panels';
+
+    // LEFT: Study Time Distribution (horizontal bars)
     const hoursBySub = {};
     sched.forEach(e=>hoursBySub[e.subjectId] = (hoursBySub[e.subjectId]||0)+1);
+    const maxHours = Math.max(...Object.values(hoursBySub), 1);
+
+    let distHTML = '<h3>Study Time Distribution</h3><div class="h-bar-chart">';
+    subs.forEach(s=>{
+      const hrs = hoursBySub[s.id] || 0;
+      const pct = Math.round((hrs/maxHours)*100);
+      distHTML += `<div class="h-bar-row">
+        <span class="h-bar-label">${s.name}</span>
+        <div class="h-bar-track"><div class="h-bar-fill" style="width:${pct}%;background:${s.color}"></div></div>
+        <span class="h-bar-val">${hrs}h</span>
+      </div>`;
+    });
+    distHTML += '</div>';
+    const distPanel = document.createElement('div');
+    distPanel.className = 'analytics-panel';
+    distPanel.innerHTML = distHTML;
+    panels.appendChild(distPanel);
+
+    // RIGHT: Task Type Breakdown
+    const typeColors = {Assignment:'#3b82f6', Exam:'#ef4444', Project:'#8b5cf6', Reading:'#22c55e'};
+    const typeCounts = {};
+    tasks.forEach(t=>typeCounts[t.type] = (typeCounts[t.type]||0)+1);
+
+    let typeHTML = '<h3>Task Type Breakdown</h3><div class="type-breakdown">';
+    Object.entries(typeCounts).sort((a,b)=>b[1]-a[1]).forEach(([type, count])=>{
+      const color = typeColors[type] || '#94a3b8';
+      const pct = totalTasks ? Math.round((count/totalTasks)*100) : 0;
+      typeHTML += `<div class="type-row">
+        <div class="type-row-left"><span class="type-dot" style="background:${color}"></span>${type}</div>
+        <div class="type-row-right">${count} (${pct}%)</div>
+      </div>`;
+    });
+    if(Object.keys(typeCounts).length===0) typeHTML += '<p style="color:var(--muted);font-size:0.8125rem">No tasks yet</p>';
+    typeHTML += '</div>';
+    const typePanel = document.createElement('div');
+    typePanel.className = 'analytics-panel';
+    typePanel.innerHTML = typeHTML;
+    panels.appendChild(typePanel);
+
+    area.appendChild(panels);
+
+    // === Second row: Weekly Schedule Load + Insights ===
+    const panels2 = document.createElement('div');
+    panels2.className = 'analytics-panels';
+
+    // LEFT: Weekly Schedule Load (vertical bars)
+    const DAYS_SHORT = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    const dayHours = [0,0,0,0,0,0,0];
+    sched.forEach(e=>dayHours[e.day]++);
+    const maxDayH = Math.max(...dayHours, 1);
+
+    let weekHTML = '<h3>Weekly Schedule Load</h3><div class="week-chart">';
+    DAYS_SHORT.forEach((d,i)=>{
+      const h = dayHours[i];
+      const hPct = Math.round((h/maxDayH)*100);
+      weekHTML += `<div class="week-bar-col">
+        <div class="week-bar" style="height:${hPct}%"></div>
+        <span class="week-bar-label">${d}</span>
+      </div>`;
+    });
+    weekHTML += '</div>';
+    const weekPanel = document.createElement('div');
+    weekPanel.className = 'analytics-panel';
+    weekPanel.innerHTML = weekHTML;
+    panels2.appendChild(weekPanel);
+
+    // RIGHT: Insights
     const topId = Object.keys(hoursBySub).sort((a,b)=>hoursBySub[b]-hoursBySub[a])[0];
     const topName = subs.find(s=>s.id===topId)?.name || '—';
-    const pendingCount = tasks.filter(t=>t.status!=='completed').length;
+    const leastId = Object.keys(hoursBySub).sort((a,b)=>hoursBySub[a]-hoursBySub[b])[0];
+    const leastName = subs.find(s=>s.id===leastId)?.name || '—';
+    const avgPerSubject = subs.length ? (totalHours/subs.length).toFixed(1) : 0;
+    const busyDay = DAYS_SHORT[dayHours.indexOf(Math.max(...dayHours))];
+    const freeDay = DAYS_SHORT[dayHours.indexOf(Math.min(...dayHours))];
 
-    const insight = document.createElement('div');
-    insight.className = 'analytics-item';
-    insight.style.marginTop = '16px';
-    insight.innerHTML = `
-      <h3 style="font-size:1.05rem;margin-bottom:10px;color:var(--text-secondary)">Insights</h3>
-      <p><strong>Most scheduled:</strong> ${topName}</p>
-      <p><strong>Pending tasks:</strong> ${pendingCount}</p>
-      <p><strong>Completion rate:</strong> ${completionRate}%</p>
-      <p><strong>Overdue tasks:</strong> ${overdue}</p>`;
-    area.appendChild(insight);
+    const insightPanel = document.createElement('div');
+    insightPanel.className = 'analytics-panel';
+    insightPanel.innerHTML = `
+      <h3>Insights</h3>
+      <div style="display:flex;flex-direction:column;gap:10px;font-size:0.875rem">
+        <p><strong>Most scheduled:</strong> ${topName}</p>
+        <p><strong>Least scheduled:</strong> ${leastName}</p>
+        <p><strong>Avg hrs/subject:</strong> ${avgPerSubject}</p>
+        <p><strong>Busiest day:</strong> ${busyDay}</p>
+        <p><strong>Lightest day:</strong> ${freeDay}</p>
+        <p><strong>Completion rate:</strong> ${completionRate}%</p>
+        <p><strong>Overdue tasks:</strong> ${overdue}</p>
+        <p><strong>Study streak:</strong> ${streak} day${streak!==1?'s':''}</p>
+      </div>`;
+    panels2.appendChild(insightPanel);
+
+    area.appendChild(panels2);
   }
 
 
@@ -586,11 +688,195 @@
     write(LS.TASK,tasks);
   }
 
+
+  /* ======== FOCUS TIMER (Pomodoro) ======== */
+  let timerInterval = null;
+  let timerSeconds = 25 * 60;
+  let timerRunning = false;
+  let timerPreset = 25;
+
+  function updateTimerDisplay(){
+    const el = $('#timer-display');
+    if(!el) return;
+    const m = Math.floor(timerSeconds / 60);
+    const s = timerSeconds % 60;
+    el.textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  }
+
+  function startTimer(){
+    if(timerRunning) return;
+    timerRunning = true;
+    timerInterval = setInterval(()=>{
+      if(timerSeconds <= 0){
+        clearInterval(timerInterval);
+        timerRunning = false;
+        showToast('Timer done! Take a break.', 5000);
+        return;
+      }
+      timerSeconds--;
+      updateTimerDisplay();
+    }, 1000);
+  }
+
+  function pauseTimer(){
+    clearInterval(timerInterval);
+    timerRunning = false;
+  }
+
+  function resetTimer(){
+    pauseTimer();
+    timerSeconds = timerPreset * 60;
+    updateTimerDisplay();
+  }
+
+  function setupTimer(){
+    const startBtn = $('#timer-start');
+    const pauseBtn = $('#timer-pause');
+    const resetBtn = $('#timer-reset');
+    if(startBtn) startBtn.addEventListener('click', startTimer);
+    if(pauseBtn) pauseBtn.addEventListener('click', pauseTimer);
+    if(resetBtn) resetBtn.addEventListener('click', resetTimer);
+
+    $$('.preset-btn').forEach(btn => {
+      btn.addEventListener('click', e => {
+        $$('.preset-btn').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        timerPreset = Number(e.target.dataset.mins);
+        timerSeconds = timerPreset * 60;
+        pauseTimer();
+        updateTimerDisplay();
+      });
+    });
+    updateTimerDisplay();
+  }
+
+
+  /* ======== RECENT ACTIVITY ======== */
+  function renderRecentActivity(){
+    const list = $('#recent-activity');
+    if(!list) return;
+    list.innerHTML = '';
+
+    const tasks = read(LS.TASK);
+    const subs = read(LS.SUB);
+
+    // Build activity items from tasks (sorted by created timestamp)
+    const activities = [];
+
+    const SVG_CHECK = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+    const SVG_PLUS = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>';
+    const SVG_BOOK = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>';
+
+    tasks.forEach(t => {
+      activities.push({
+        icon: t.status === 'completed' ? SVG_CHECK : SVG_PLUS,
+        iconClass: t.status === 'completed' ? 'done' : 'add',
+        text: t.status === 'completed'
+          ? `Completed <strong>${t.title}</strong>`
+          : `Added task <strong>${t.title}</strong>`,
+        time: t.created || Date.now()
+      });
+    });
+
+    subs.forEach(s => {
+      activities.push({
+        icon: SVG_BOOK,
+        iconClass: 'subject',
+        text: `Subject <strong>${s.name}</strong>`,
+        time: s.created || Date.now()
+      });
+    });
+
+    // Sort newest first, take top 6
+    activities.sort((a,b) => b.time - a.time);
+    const recent = activities.slice(0, 6);
+
+    if(recent.length === 0){
+      list.innerHTML = '<li style="color:var(--muted);font-style:italic;padding:8px 0">No activity yet</li>';
+      return;
+    }
+
+    recent.forEach(a => {
+      const li = document.createElement('li');
+      const ago = timeAgo(a.time);
+      li.innerHTML = `<span class="activity-icon">${a.icon}</span>
+        <div><div class="activity-text">${a.text}</div><div class="activity-time">${ago}</div></div>`;
+      list.appendChild(li);
+    });
+  }
+
+  function timeAgo(ts){
+    const diff = Date.now() - ts;
+    const mins = Math.floor(diff / 60000);
+    if(mins < 1) return 'just now';
+    if(mins < 60) return mins + 'm ago';
+    const hours = Math.floor(mins / 60);
+    if(hours < 24) return hours + 'h ago';
+    const days = Math.floor(hours / 24);
+    return days + 'd ago';
+  }
+
+
+  /* ======== MOTIVATIONAL QUOTES ======== */
+  const QUOTES = [
+    { text: "The secret of getting ahead is getting started.", author: "Mark Twain" },
+    { text: "It always seems impossible until it's done.", author: "Nelson Mandela" },
+    { text: "Success is the sum of small efforts repeated day in and day out.", author: "Robert Collier" },
+    { text: "Don't watch the clock; do what it does. Keep going.", author: "Sam Levenson" },
+    { text: "The expert in anything was once a beginner.", author: "Helen Hayes" },
+    { text: "Learning is not attained by chance, it must be sought for with ardor.", author: "Abigail Adams" },
+    { text: "Education is the passport to the future.", author: "Malcolm X" },
+    { text: "The beautiful thing about learning is that no one can take it away from you.", author: "B.B. King" },
+    { text: "Study hard what interests you the most in the most undisciplined, irreverent way possible.", author: "Richard Feynman" },
+    { text: "Live as if you were to die tomorrow. Learn as if you were to live forever.", author: "Mahatma Gandhi" },
+    { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
+    { text: "Believe you can and you're halfway there.", author: "Theodore Roosevelt" }
+  ];
+
+  function renderQuote(){
+    const quoteEl = $('#daily-quote');
+    const authorEl = $('#quote-author');
+    if(!quoteEl || !authorEl) return;
+    // Pick quote based on day of year for consistency within a day
+    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(),0,0)) / (1000*60*60*24));
+    const q = QUOTES[dayOfYear % QUOTES.length];
+    quoteEl.innerHTML = `&ldquo;${q.text}&rdquo;`;
+    authorEl.innerHTML = `&mdash; ${q.author}`;
+  }
+
+
+  /* ======== QUICK ACTIONS ======== */
+  function setupQuickActions(){
+    const qaSubject = $('#qa-add-subject');
+    const qaTask = $('#qa-add-task');
+    const qaSchedule = $('#qa-go-schedule');
+    const qaAnalytics = $('#qa-go-analytics');
+
+    if(qaSubject) qaSubject.addEventListener('click', () => openSubjectForm());
+    if(qaTask) qaTask.addEventListener('click', () => openTaskForm());
+    if(qaSchedule) qaSchedule.addEventListener('click', () => {
+      $$('.nav-btn').forEach(n=>n.classList.remove('active'));
+      const schedBtn = $$('.nav-btn').find(b=>b.dataset.nav==='schedule');
+      if(schedBtn) schedBtn.classList.add('active');
+      showView('schedule');
+    });
+    if(qaAnalytics) qaAnalytics.addEventListener('click', () => {
+      $$('.nav-btn').forEach(n=>n.classList.remove('active'));
+      const anaBtn = $$('.nav-btn').find(b=>b.dataset.nav==='analytics');
+      if(anaBtn) anaBtn.classList.add('active');
+      showView('analytics');
+    });
+  }
+
+
   /* ======== INIT ======== */
   function init(){
     ensureDefaults(); setupNav(); setupTaskFilter();
     populateScheduleSelect(); renderSubjects(); renderTasks();
     renderSchedule(); renderAnalytics(); applyTheme(); renderDashboard();
+
+    // Sidebar features
+    setupTimer(); setupQuickActions(); renderQuote(); renderRecentActivity();
 
     $('#add-subject-btn').addEventListener('click',()=>openSubjectForm());
     $('#add-task-btn').addEventListener('click',openTaskForm);
