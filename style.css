@@ -1,7 +1,7 @@
 
 /* ---------- CSS Custom Properties (Light theme) ---------- */
 :root {
-  --bg: #f0f4f8;
+  --bg: #f5f7fa;
   --card: #ffffff;
   --card-hover: #f8fafc;
   --text: #1e293b;
@@ -10,39 +10,39 @@
   --border: #e2e8f0;
   --accent: #3b82f6;
   --accent-hover: #2563eb;
-  --accent-light: #dbeafe;
+  --accent-light: #eff6ff;
   --danger: #ef4444;
   --danger-hover: #dc2626;
   --success: #22c55e;
-  --success-light: #dcfce7;
+  --success-light: #f0fdf4;
   --warning: #f59e0b;
-  --warning-light: #fef3c7;
-  --gradient: linear-gradient(135deg, #3b82f6, #8b5cf6);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --warning-light: #fffbeb;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.1);
   --radius: 12px;
   --radius-sm: 8px;
   --radius-xs: 6px;
   --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
   --transition: 0.2s ease;
+  --transition-slow: 0.3s ease;
 }
 
 /* ---------- Dark theme overrides ---------- */
 body.dark {
-  --bg: #0f172a;
-  --card: #1e293b;
-  --card-hover: #273548;
-  --text: #e2e8f0;
+  --bg: #111827;
+  --card: #1f2937;
+  --card-hover: #283345;
+  --text: #f1f5f9;
   --text-secondary: #94a3b8;
   --muted: #64748b;
-  --border: #334155;
+  --border: #374151;
   --accent-light: #1e3a5f;
   --success-light: #14532d;
   --warning-light: #422006;
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
 /* ---------- Reset & base ---------- */
@@ -106,6 +106,7 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
+  color: var(--text);
 }
 
 .brand-logo {
@@ -140,12 +141,13 @@ body {
 .nav-btn:hover {
   background: var(--accent-light);
   color: var(--accent);
+  transform: translateY(-1px);
 }
 
 .nav-btn.active {
-  background: var(--gradient);
+  background: var(--accent);
   color: #fff;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.35);
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.2);
 }
 
 /* =============================================
@@ -185,7 +187,7 @@ body {
 main {
   max-width: 1120px;
   margin: 0 auto;
-  padding: 24px 20px 48px;
+  padding: 24px 20px 68px;
 }
 
 .section-title {
@@ -210,7 +212,7 @@ main {
   border-radius: var(--radius);
   padding: 20px;
   box-shadow: var(--shadow-sm);
-  transition: box-shadow var(--transition), transform var(--transition);
+  transition: box-shadow var(--transition);
 }
 
 .card:hover {
@@ -231,7 +233,7 @@ main {
 }
 
 .stat {
-  font-size: 2.5rem;
+  font-size: 2.25rem;
   font-weight: 800;
   color: var(--accent);
   line-height: 1.1;
@@ -257,16 +259,22 @@ main {
 
 /* Welcome box */
 .welcome-box {
-  background: var(--card);
+  background: var(--accent-light);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 28px;
-  box-shadow: var(--shadow-sm);
+  padding: 24px;
+  margin-bottom: 20px;
 }
 
 .welcome-box h2 {
   font-size: 1.25rem;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
+  color: var(--text);
+}
+
+.welcome-box .muted {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
 }
 
 /* =============================================
@@ -318,23 +326,24 @@ main {
 .btn.primary {
   background: var(--accent);
   color: #fff;
-  border-color: var(--accent);
+  border-color: transparent;
 }
 
 .btn.primary:hover {
   background: var(--accent-hover);
-  border-color: var(--accent-hover);
 }
 
 .btn.danger {
   background: var(--danger);
   color: #fff;
   border-color: var(--danger);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
 }
 
 .btn.danger:hover {
   background: var(--danger-hover);
   border-color: var(--danger-hover);
+  transform: translateY(-1px);
 }
 
 .btn.success {
@@ -373,7 +382,7 @@ main {
   border: 1px solid var(--border);
   border-left: 5px solid var(--muted);
   border-radius: var(--radius-sm);
-  transition: background var(--transition), box-shadow var(--transition);
+  transition: background var(--transition-slow), box-shadow var(--transition-slow), transform var(--transition);
 }
 
 .subject-item:hover {
@@ -435,6 +444,7 @@ main {
 
 .schedule-grid .slot:hover {
   background: var(--accent-light);
+  transform: scale(1.02);
 }
 
 .slot .s-title {
@@ -454,18 +464,19 @@ main {
    ============================================= */
 .progress {
   background: var(--border);
-  height: 14px;
+  height: 16px;
   border-radius: 99px;
   overflow: hidden;
   margin-top: 6px;
+  position: relative;
 }
 
 .progress > i {
   display: block;
   height: 100%;
   border-radius: 99px;
-  background: var(--gradient);
-  transition: width 0.4s ease;
+  background: var(--accent);
+  transition: width 0.6s ease;
 }
 
 /* =============================================
@@ -475,7 +486,7 @@ main {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 0;
+  padding: 18px 0;
   border-bottom: 1px solid var(--border);
   gap: 12px;
 }
@@ -488,6 +499,19 @@ main {
   font-weight: 600;
   font-size: 0.9375rem;
 }
+
+.settings-label {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.settings-label small {
+  display: block;
+  margin-top: 2px;
+}
+
+
 
 /* =============================================
    MODAL
@@ -688,6 +712,202 @@ select:focus {
 }
 
 /* =============================================
+   EMPTY STATE
+   ============================================= */
+.empty-state {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--muted);
+}
+
+.empty-state p {
+  font-size: 0.9375rem;
+  max-width: 320px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* =============================================
+   TASK FILTER TABS
+   ============================================= */
+.task-filter {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+  padding: 4px;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  width: fit-content;
+}
+
+.filter-btn {
+  font-family: var(--font);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 7px 16px;
+  border: none;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.filter-btn.active {
+  background: var(--card);
+  color: var(--accent);
+  box-shadow: var(--shadow-sm);
+}
+
+.filter-btn:hover:not(.active) {
+  color: var(--text);
+}
+
+/* =============================================
+   TASK STATUS BADGES
+   ============================================= */
+.task-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 3px 8px;
+  border-radius: 99px;
+}
+
+.task-badge.pending {
+  background: var(--warning-light);
+  color: var(--warning);
+}
+
+.task-badge.completed {
+  background: var(--success-light);
+  color: var(--success);
+}
+
+.task-badge.overdue {
+  background: rgba(239,68,68,0.1);
+  color: var(--danger);
+}
+
+.subject-item.task-completed {
+  opacity: 0.65;
+}
+
+.subject-item.task-completed .subject-meta strong {
+  text-decoration: line-through;
+}
+
+/* =============================================
+   PRIORITY BADGE
+   ============================================= */
+.priority-pill {
+  display: inline-block;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 2px 8px;
+  border-radius: 99px;
+}
+
+.priority-pill.high {
+  background: rgba(239,68,68,0.12);
+  color: var(--danger);
+}
+
+.priority-pill.normal {
+  background: var(--accent-light);
+  color: var(--accent);
+}
+
+.priority-pill.low {
+  background: var(--success-light);
+  color: var(--success);
+}
+
+/* =============================================
+   ANALYTICS SUMMARY CARDS
+   ============================================= */
+.analytics-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.summary-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  text-align: center;
+}
+
+.summary-card .summary-val {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.summary-card .summary-label {
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 4px;
+}
+
+/* Analytics progress items */
+.analytics-item {
+  margin: 14px 0;
+  padding: 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.analytics-item-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.analytics-item-head strong {
+  font-size: 0.9375rem;
+}
+
+.analytics-pct {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* =============================================
+   FOOTER
+   ============================================= */
+.app-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px;
+  font-size: 0.8125rem;
+  color: var(--muted);
+  background: var(--card);
+  border-top: 1px solid var(--border);
+  z-index: 50;
+}
+
+/* =============================================
    DAY TABS (mobile schedule day switcher)
    ============================================= */
 .day-tabs {
@@ -798,11 +1018,11 @@ select:focus {
   }
 
   .welcome-box {
-    padding: 18px 14px;
+    padding: 20px 16px;
   }
 
   .welcome-box h2 {
-    font-size: 1.05rem;
+    font-size: 1.1rem;
   }
 
   /* --- Panels --- */
@@ -882,6 +1102,27 @@ select:focus {
     text-align: center;
   }
 
+  .settings-label {
+    gap: 10px;
+  }
+
+  /* --- Task filter --- */
+  .task-filter {
+    width: 100%;
+  }
+
+  .filter-btn {
+    flex: 1;
+    text-align: center;
+    padding: 10px 8px;
+  }
+
+  /* --- Analytics summary --- */
+  .analytics-summary {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
   /* --- Modal full-width on phones --- */
   .modal-overlay {
     padding: 12px;
@@ -923,6 +1164,11 @@ select:focus {
   /* --- Progress bars --- */
   .progress {
     height: 18px;
+  }
+
+  /* --- Footer --- */
+  .app-footer {
+    font-size: 0.75rem;
   }
 }
 
