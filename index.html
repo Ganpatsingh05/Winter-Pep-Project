@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Smart Study Planner — manage subjects, schedule study sessions, track tasks and view analytics." />
+  <meta name="theme-color" content="#3b82f6" />
   <title>Smart Study Planner</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -12,12 +15,12 @@
   <header class="topbar">
     <div class="brand"><img src="logo.png" alt="Logo" class="brand-logo" /> Smart Study Planner</div>
     <nav class="nav" id="main-nav" aria-label="Main navigation">
-      <button data-nav="dashboard" class="nav-btn active" type="button">Dashboard</button>
-      <button data-nav="subjects"  class="nav-btn" type="button">Subjects</button>
-      <button data-nav="schedule"  class="nav-btn" type="button">Schedule</button>
-      <button data-nav="tasks"     class="nav-btn" type="button">Tasks</button>
-      <button data-nav="analytics" class="nav-btn" type="button">Analytics</button>
-      <button data-nav="settings"  class="nav-btn" type="button">Settings</button>
+      <button data-nav="dashboard" class="nav-btn active" type="button"><span class="nav-icon">📊</span> Dashboard</button>
+      <button data-nav="subjects"  class="nav-btn" type="button"><span class="nav-icon">📘</span> Subjects</button>
+      <button data-nav="schedule"  class="nav-btn" type="button"><span class="nav-icon">🗓️</span> Schedule</button>
+      <button data-nav="tasks"     class="nav-btn" type="button"><span class="nav-icon">✅</span> Tasks</button>
+      <button data-nav="analytics" class="nav-btn" type="button"><span class="nav-icon">📈</span> Analytics</button>
+      <button data-nav="settings"  class="nav-btn" type="button"><span class="nav-icon">⚙️</span> Settings</button>
     </nav>
 
     <button class="hamburger" id="hamburger" type="button" aria-label="Toggle menu">
@@ -32,24 +35,43 @@
 
     <!-- A. DASHBOARD -->
     <section id="dashboard" class="view">
-      <h2 class="section-title">Dashboard</h2>
+      <div class="welcome-box">
+        <div class="welcome-content">
+          <h2 id="greeting">Welcome back!</h2>
+          <p class="muted" id="greeting-sub">Here&rsquo;s your study overview for today.</p>
+        </div>
+      </div>
       <div class="cards">
         <div class="card card-accent">
+          <div class="card-icon" style="background:var(--accent-light);color:var(--accent)">📘</div>
           <h3>Total Subjects</h3>
           <div id="total-subjects" class="stat">0</div>
         </div>
         <div class="card">
+          <div class="card-icon" style="background:var(--warning-light);color:var(--warning)">📝</div>
+          <h3>Pending Tasks</h3>
+          <div id="pending-tasks" class="stat">0</div>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:var(--success-light);color:var(--success)">✅</div>
+          <h3>Completed Tasks</h3>
+          <div id="completed-tasks" class="stat">0</div>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:rgba(139,92,246,0.12);color:#8b5cf6">⏱️</div>
+          <h3>Study Hours / Week</h3>
+          <div id="study-hours" class="stat">0</div>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:var(--danger);color:#fff">🔔</div>
           <h3>Upcoming Deadlines</h3>
           <ul id="upcoming-deadlines" class="dash-list"></ul>
         </div>
         <div class="card">
+          <div class="card-icon" style="background:var(--accent-light);color:var(--accent)">📅</div>
           <h3>Today&rsquo;s Schedule</h3>
           <ul id="today-schedule" class="dash-list"></ul>
         </div>
-      </div>
-      <div class="welcome-box">
-        <h2>Welcome &mdash; plan your study time efficiently</h2>
-        <p class="muted">Use the navigation above to manage subjects, plan schedules, track tasks and view progress.</p>
       </div>
     </section>
 
@@ -57,10 +79,14 @@
     <section id="subjects" class="view hidden">
       <div class="panel">
         <div class="panel-head">
-          <h2 class="section-title">Subjects</h2>
+          <h2 class="section-title">📘 Subjects</h2>
           <button id="add-subject-btn" class="btn primary" type="button">+ Add Subject</button>
         </div>
         <div id="subjects-list" class="list-group"></div>
+        <div id="subjects-empty" class="empty-state hidden">
+          <div class="empty-icon">📘</div>
+          <p>No subjects yet. Add your first subject to get started!</p>
+        </div>
       </div>
     </section>
 
@@ -68,7 +94,7 @@
     <section id="schedule" class="view hidden">
       <div class="panel">
         <div class="panel-head">
-          <h2 class="section-title">Weekly Schedule</h2>
+          <h2 class="section-title">🗓️ Weekly Schedule</h2>
           <div class="controls">
             <select id="schedule-subject-select" aria-label="Select subject"></select>
             <button id="clear-schedule" class="btn" type="button">Clear Week</button>
@@ -76,7 +102,7 @@
         </div>
         <div class="day-tabs" id="day-tabs" aria-label="Select day for mobile view"></div>
         <div id="schedule-grid" class="schedule-grid" aria-label="Weekly timetable"></div>
-        <p class="muted hint">Click a slot to assign the selected subject. Click with no subject selected to clear a slot.</p>
+        <p class="muted hint">💡 Click a slot to assign the selected subject. Click with no subject selected to clear a slot.</p>
       </div>
     </section>
 
@@ -84,17 +110,27 @@
     <section id="tasks" class="view hidden">
       <div class="panel">
         <div class="panel-head">
-          <h2 class="section-title">Tasks</h2>
+          <h2 class="section-title">✅ Tasks</h2>
           <button id="add-task-btn" class="btn primary" type="button">+ Add Task</button>
         </div>
+        <div id="task-filter" class="task-filter">
+          <button class="filter-btn active" data-filter="all" type="button">All</button>
+          <button class="filter-btn" data-filter="pending" type="button">Pending</button>
+          <button class="filter-btn" data-filter="completed" type="button">Completed</button>
+        </div>
         <div id="tasks-list" class="list-group"></div>
+        <div id="tasks-empty" class="empty-state hidden">
+          <div class="empty-icon">✅</div>
+          <p>No tasks yet. Add a task to track your assignments and exams!</p>
+        </div>
       </div>
     </section>
 
     <!-- E. PROGRESS ANALYTICS -->
     <section id="analytics" class="view hidden">
       <div class="panel">
-        <h2 class="section-title">Progress Analytics</h2>
+        <h2 class="section-title">📈 Progress Analytics</h2>
+        <div id="analytics-summary" class="analytics-summary"></div>
         <div id="analytics-area"></div>
       </div>
     </section>
@@ -102,23 +138,37 @@
     <!-- F. SETTINGS -->
     <section id="settings" class="view hidden">
       <div class="panel">
-        <h2 class="section-title">Settings</h2>
+        <h2 class="section-title">⚙️ Settings</h2>
         <div class="settings-row">
-          <label>Theme</label>
+          <div class="settings-label">
+            <span class="settings-icon">🎨</span>
+            <div><label>Theme</label><small class="muted">Switch between light and dark mode</small></div>
+          </div>
           <button id="theme-toggle" class="btn" type="button">Toggle Light / Dark</button>
         </div>
         <div class="settings-row">
-          <label>Export</label>
+          <div class="settings-label">
+            <span class="settings-icon">💾</span>
+            <div><label>Export Data</label><small class="muted">Download all data as a JSON file</small></div>
+          </div>
           <button id="export-data" class="btn" type="button">Export JSON</button>
         </div>
         <div class="settings-row">
-          <label>Reset</label>
+          <div class="settings-label">
+            <span class="settings-icon">🗑️</span>
+            <div><label>Reset</label><small class="muted">Permanently delete all saved data</small></div>
+          </div>
           <button id="reset-data" class="btn danger" type="button">Reset All Data</button>
         </div>
       </div>
     </section>
 
   </main>
+
+  <!-- FOOTER -->
+  <footer class="app-footer">
+    <p>Smart Study Planner &copy; 2026 &mdash; Built with HTML5, CSS3 &amp; Vanilla JS</p>
+  </footer>
 
   <div id="modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
     <div class="modal-box">
