@@ -1,6 +1,22 @@
 
 (function(){
   'use strict';
+
+  /* ======== FIREBASE SETUP ======== */
+  const firebaseConfig = {
+    databaseURL: "https://smart-study-planner-142f4-default-rtdb.asia-southeast1.firebasedatabase.app"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  // Firebase path mapping
+  const FB_PATHS = {
+    ss_subjects: 'subjects',
+    ss_tasks:    'tasks',
+    ss_schedule: 'schedule',
+    ss_prefs:    'prefs'
+  };
+
   // LocalStorage keys
   const LS = {SUB:'ss_subjects', TASK:'ss_tasks', SCHED:'ss_schedule', PREF:'ss_prefs'};
 
@@ -8,8 +24,58 @@
   const $ = sel => document.querySelector(sel);
   const $$ = sel => Array.from(document.querySelectorAll(sel));
   function uid(prefix='id'){return prefix+Math.random().toString(36).slice(2,9)}
+
+  // Read from localStorage (synchronous cache)
   function read(key){try{return JSON.parse(localStorage.getItem(key))||[];}catch(e){return []}}
-  function write(key,val){localStorage.setItem(key,JSON.stringify(val));}
+
+  // Write to localStorage AND sync to Firebase
+  function write(key, val){
+    localStorage.setItem(key, JSON.stringify(val));
+    const fbPath = FB_PATHS[key];
+    if(fbPath){
+      db.ref(fbPath).set(val).catch(err => console.warn('Firebase write failed:', err));
+    }
+  }
+
+  // Pull all data from Firebase into localStorage, then re-render
+  function syncFromFirebase(){
+    const keys = [LS.SUB, LS.TASK, LS.SCHED, LS.PREF];
+    const promises = keys.map(key => {
+      const fbPath = FB_PATHS[key];
+      return db.ref(fbPath).once('value').then(snap => {
+        const val = snap.val();
+        if(val !== null){
+          localStorage.setItem(key, JSON.stringify(val));
+        }
+      });
+    });
+    return Promise.all(promises)
+      .then(() => { refreshAllViews(); showToast('Synced with cloud', 2000); })
+      .catch(err => console.warn('Firebase sync failed (using local data):', err));
+  }
+
+  // Listen for real-time changes from Firebase
+  function setupRealtimeListeners(){
+    Object.entries(FB_PATHS).forEach(([lsKey, fbPath]) => {
+      db.ref(fbPath).on('value', snap => {
+        const val = snap.val();
+        if(val !== null){
+          const current = localStorage.getItem(lsKey);
+          const incoming = JSON.stringify(val);
+          if(current !== incoming){
+            localStorage.setItem(lsKey, incoming);
+            refreshAllViews();
+          }
+        }
+      });
+    });
+  }
+
+  // Re-render all views based on current localStorage
+  function refreshAllViews(){
+    renderDashboard(); renderSubjects(); renderTasks();
+    renderSchedule(); renderAnalytics(); applyTheme();
+  }
 
   // Default init
   function ensureDefaults(){
@@ -540,6 +606,9 @@
 
     checkDeadlines();
     setInterval(checkDeadlines, 60*60*1000);
+
+    // Firebase: pull latest data then listen for real-time updates
+    syncFromFirebase().then(() => setupRealtimeListeners());
   }
 
   document.addEventListener('DOMContentLoaded', init);
