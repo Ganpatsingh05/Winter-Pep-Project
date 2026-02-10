@@ -9,7 +9,6 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
-  // Firebase path mapping
   const FB_PATHS = {
     ss_subjects: 'subjects',
     ss_tasks:    'tasks',
@@ -17,18 +16,17 @@
     ss_prefs:    'prefs'
   };
 
-  // LocalStorage keys
   const LS = {SUB:'ss_subjects', TASK:'ss_tasks', SCHED:'ss_schedule', PREF:'ss_prefs'};
 
-  // Helpers
+
   const $ = sel => document.querySelector(sel);
   const $$ = sel => Array.from(document.querySelectorAll(sel));
   function uid(prefix='id'){return prefix+Math.random().toString(36).slice(2,9)}
 
-  // Read from localStorage (synchronous cache)
+  // Reading from localStorage 
   function read(key){try{return JSON.parse(localStorage.getItem(key))||[];}catch(e){return []}}
 
-  // Write to localStorage AND sync to Firebase
+  // Writing to localStorage AND syncing to Firebase
   function write(key, val){
     localStorage.setItem(key, JSON.stringify(val));
     const fbPath = FB_PATHS[key];
@@ -37,7 +35,7 @@
     }
   }
 
-  // Pull all data from Firebase into localStorage, then re-render
+
   function syncFromFirebase(){
     const keys = [LS.SUB, LS.TASK, LS.SCHED, LS.PREF];
     const promises = keys.map(key => {
@@ -54,7 +52,6 @@
       .catch(err => console.warn('Firebase sync failed (using local data):', err));
   }
 
-  // Listen for real-time changes from Firebase
   function setupRealtimeListeners(){
     Object.entries(FB_PATHS).forEach(([lsKey, fbPath]) => {
       db.ref(fbPath).on('value', snap => {
@@ -78,12 +75,13 @@
     renderRecentActivity(); renderQuote();
   }
 
-  // Default init
+
   function ensureDefaults(){
-    if(!localStorage.getItem(LS.SUB)) write(LS.SUB,[]);
-    if(!localStorage.getItem(LS.TASK)) write(LS.TASK,[]);
-    if(!localStorage.getItem(LS.SCHED)) write(LS.SCHED,[]);
-    if(!localStorage.getItem(LS.PREF)) write(LS.PREF,{theme:'light'});
+    // Only set localStorage defaults — never push empty data to Firebase
+    if(!localStorage.getItem(LS.SUB)) localStorage.setItem(LS.SUB, JSON.stringify([]));
+    if(!localStorage.getItem(LS.TASK)) localStorage.setItem(LS.TASK, JSON.stringify([]));
+    if(!localStorage.getItem(LS.SCHED)) localStorage.setItem(LS.SCHED, JSON.stringify([]));
+    if(!localStorage.getItem(LS.PREF)) localStorage.setItem(LS.PREF, JSON.stringify({theme:'light'}));
   }
 
   // Modal utilities
@@ -342,7 +340,7 @@
       headerDay.textContent = DAYS[mobileDay];
       grid.appendChild(headerDay);
 
-      for (let hour = 6; hour <= 22; hour++) {
+      for (let hour = 6; hour <= 24; hour++) {
         const hourCell = document.createElement('div');
         hourCell.className = 'slot'; hourCell.textContent = hour + ':00';
         grid.appendChild(hourCell);
@@ -372,7 +370,7 @@
         grid.appendChild(h);
       });
 
-      for (let hour = 6; hour <= 22; hour++) {
+      for (let hour = 6; hour <= 24; hour++) {
         const hourCell = document.createElement('div');
         hourCell.className = 'slot'; hourCell.textContent = hour + ':00';
         grid.appendChild(hourCell);
@@ -668,24 +666,36 @@
     showToast('Data exported');
   }
   function resetAll(){
-    if(!confirm('Reset all data? This cannot be undone.')) return;
+    if(!confirm('Reset all local data? Cloud data will be preserved.')) return;
+    // Only clear localStorage — never touch Firebase
     localStorage.removeItem(LS.SUB); localStorage.removeItem(LS.TASK);
     localStorage.removeItem(LS.SCHED); localStorage.removeItem(LS.PREF);
-    ensureDefaults(); init(); showToast('All data reset');
+    ensureDefaults();
+    // Restore data from Firebase into the now-empty localStorage
+    syncFromFirebase().then(() => {
+      refreshAllViews();
+      showToast('Local data reset — restored from cloud');
+    }).catch(() => {
+      refreshAllViews();
+      showToast('Local data reset (offline — cloud sync pending)');
+    });
   }
 
   /* ======== DEADLINE ALERTS ======== */
   function checkDeadlines(){
     const tasks = read(LS.TASK); const now = new Date();
+    let changed = false;
     tasks.forEach(t=>{
       if(!t.deadline || t._alerted || t.status==='completed') return;
       const d = new Date(t.deadline); const diff = d - now;
       if(diff>0 && diff < (24*60*60*1000)){
         showToast(`Due soon: ${t.title} — ${d.toLocaleDateString()}`,6000);
         t._alerted = true;
+        changed = true;
       }
     });
-    write(LS.TASK,tasks);
+    // Only write back if a task was actually flagged, to avoid pushing empty data
+    if(changed) write(LS.TASK,tasks);
   }
 
 
@@ -872,11 +882,9 @@
   /* ======== INIT ======== */
   function init(){
     ensureDefaults(); setupNav(); setupTaskFilter();
-    populateScheduleSelect(); renderSubjects(); renderTasks();
-    renderSchedule(); renderAnalytics(); applyTheme(); renderDashboard();
 
-    // Sidebar features
-    setupTimer(); setupQuickActions(); renderQuote(); renderRecentActivity();
+    // Sidebar features & event listeners (UI setup — doesn't depend on data)
+    setupTimer(); setupQuickActions(); renderQuote();
 
     $('#add-subject-btn').addEventListener('click',()=>openSubjectForm());
     $('#add-task-btn').addEventListener('click',openTaskForm);
@@ -890,11 +898,18 @@
     $('#reset-data').addEventListener('click',resetAll);
     modal.addEventListener('click',e=>{ if(e.target===modal) hideModal(); });
 
-    checkDeadlines();
+    // Firebase-first: pull cloud data into localStorage before rendering,
+    // so a cleared localStorage never overwrites Firebase with empty data.
+    syncFromFirebase().then(() => {
+      refreshAllViews();
+      checkDeadlines();
+      setupRealtimeListeners();
+    }).catch(() => {
+      // Offline or Firebase error — render from whatever localStorage has
+      refreshAllViews();
+      checkDeadlines();
+    });
     setInterval(checkDeadlines, 60*60*1000);
-
-    // Firebase: pull latest data then listen for real-time updates
-    syncFromFirebase().then(() => setupRealtimeListeners());
   }
 
   document.addEventListener('DOMContentLoaded', init);
